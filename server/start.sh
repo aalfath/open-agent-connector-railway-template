@@ -22,6 +22,11 @@ export CONNECTOR_PROJECT_NAME="${CONNECTOR_PROJECT_NAME:-ConnectorHub}"
 # domain exists, so accept only a real http(s)://host value.
 ORIGIN="${CONNECTOR_PUBLIC_ORIGIN:-}"
 case "$ORIGIN" in
+  http://?*|https://?*) ;;
+  # Fall back to the public domain Railway reports for the "web" service, if any.
+  *) [ -n "${RAILWAY_SERVICE_WEB_URL:-}" ] && ORIGIN="https://${RAILWAY_SERVICE_WEB_URL}" ;;
+esac
+case "$ORIGIN" in
   http://?*|https://?*) ORIGIN="${ORIGIN%/}" ;;
   *) echo "open-agent-connector: CONNECTOR_PUBLIC_ORIGIN is empty or invalid ('$ORIGIN'); OAuth callbacks will not work until it is set" >&2
      ORIGIN="http://localhost:8000" ;;
