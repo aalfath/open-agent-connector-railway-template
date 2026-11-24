@@ -2,7 +2,7 @@
 # Start script for the Open Agent Connector API on Railway.
 set -eu
 
-fail() { echo "open-agent-connector: $*" >&2; exit 1; }
+fail() { echo "open-agent-connector: $*" >&2; exit "${RC:-1}"; }
 
 # Secrets come from the template (generated per deploy). Refuse to start without them, so the
 # app never falls back to a token or key that nobody stored.
@@ -40,4 +40,12 @@ cd /app
 # One worker: SQLite and upstream's in-process caches expect a single instance.
 # run.py listens on one dual-stack socket ([::]:PORT), so Railway's private network reaches it over IPv6 and IPv4.
 export PORT
-exec python /usr/local/lib/oac-run.py
+python /usr/local/lib/oac-run.py &
+APP_PID=$!
+trap 'kill -TERM "$APP_PID" 2>/dev/null; wait "$APP_PID"; exit 143' TERM INT
+set +e
+wait "$APP_PID"
+RC=$?
+# The API never stops on its own: any exit (crash, kill, OOM) ends the service non-zero so Railway restarts it.
+[ "$RC" -ne 0 ] || RC=1
+fail "the API process stopped (exit $RC); exiting so Railway restarts the service"
