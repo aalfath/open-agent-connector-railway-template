@@ -38,6 +38,6 @@ PORT="${PORT:-8000}"
 echo "open-agent-connector: API on [::]:$PORT, public origin $CONNECTOR_PUBLIC_ORIGIN"
 cd /app
 # One worker: SQLite and upstream's in-process caches expect a single instance.
-# "::" listens on IPv6 and IPv4, so Railway's private network reaches it.
-exec uvicorn main:app --host :: --port "$PORT" --workers 1 --no-server-header \
-  --timeout-graceful-shutdown 5 --log-level "${LOG_LEVEL:-info}"
+# run.py listens on one dual-stack socket ([::]:PORT), so Railway's private network reaches it over IPv6 and IPv4.
+export PORT
+exec python /usr/local/lib/oac-run.py

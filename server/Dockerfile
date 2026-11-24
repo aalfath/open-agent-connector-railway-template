@@ -27,6 +27,7 @@ COPY requirements.lock.txt /app/requirements.lock.txt
 RUN pip install --no-compile -r /app/requirements.lock.txt && mkdir -p /app/data
 
 COPY start.sh /usr/local/bin/oac-server
+COPY run.py /usr/local/lib/oac-run.py
 RUN chmod 755 /usr/local/bin/oac-server
 
 ENV PORT=8000
