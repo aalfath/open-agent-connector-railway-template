@@ -1,0 +1,37 @@
+{
+	admin off
+	auto_https off
+	persist_config off
+	servers {
+		# Railway's edge proxies (both ranges) may set X-Forwarded-*.
+		trusted_proxies static 100.64.0.0/10 152.233.0.0/16
+	}
+	log {
+		output stdout
+		format console
+		level WARN
+	}
+}
+
+:{$PORT} {
+	encode gzip
+
+	# Health check for Railway: answers only when the Next.js console is up.
+	handle /healthz {
+		rewrite * /favicon.ico
+		reverse_proxy 127.0.0.1:3000
+	}
+
+	# Upstream's production routing: API paths go to the FastAPI server, everything else to the console.
+	@api path /api/* /v1 /v1/* /mcp /mcp/* /health /docs /docs/* /redoc /openapi.json
+	handle @api {
+		reverse_proxy {$OAC_SERVER_URL} {
+			header_up X-Real-IP {client_ip}
+			flush_interval -1
+		}
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:3000
+	}
+}
