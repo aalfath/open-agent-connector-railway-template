@@ -9,6 +9,8 @@ import sys
 
 import uvicorn
 
+sys.path.insert(0, os.getcwd())  # the app lives in /app, the working directory
+
 port = int(os.environ.get("PORT", "8000"))
 sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
